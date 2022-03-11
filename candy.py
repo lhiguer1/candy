@@ -58,7 +58,6 @@ if __name__=='__main__':
 
                 }
         save_page('signin.html', response.content)
-        print(f'[+] {form["authenticity_token"]=}')
         assert form['authenticity_token']
 
         # sign in
@@ -69,7 +68,6 @@ if __name__=='__main__':
         response = sess.get(candy_url)
         form = {'authenticity_token': get_authenticity_token(response) }
         save_page('candy.html', response.content)
-        print(f'[+] {form["authenticity_token"]=}')
 
         # get them Clams
         if can_get_candy(response):
