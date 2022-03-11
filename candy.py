@@ -35,7 +35,13 @@ def save_page(title, content:bytes):
     with open(title, 'wb') as fd:
         fd.write(content)
 
-
+def can_get_candy(response):
+    '''
+    Check if candy is available by looking for an element with an id=next-daily-reward-countdown-timer_element
+    '''
+    html = lxml.html.fromstring(response.text)
+    timer_element = html.xpath(r'//span//t[@id="next-daily-reward-countdown-timer"]')
+    return not timer_element
 
 if __name__=='__main__':
     with requests.Session() as sess:
@@ -66,9 +72,8 @@ if __name__=='__main__':
         print(f'[+] {form["authenticity_token"]=}')
 
         # get them Clams
-        response = sess.post(daily_check_in_url, data=form)
-        save_page('candy_after.html', response.content)
-
-
+        if can_get_candy(response):
+            response = sess.post(daily_check_in_url, data=form)
+            save_page('candy_after.html', response.content)
 
 
