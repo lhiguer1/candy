@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 import requests
 import sys
+import os
 import lxml.html
 from dotenv import dotenv_values
 
 config = dotenv_values('.env')
 username = config['username']
 password = config['password']
+
+page_path = 'pages'
 
 if not (username and password):
     raise ValueError('username and/or password not set in \'.env\' file')
@@ -34,7 +37,10 @@ def save_page(title, content:bytes):
     '''
     Save page for debug purposuses
     '''
-    with open(title, 'wb') as fd:
+    if not os.path.isdir(page_path):
+        os.mkdir(page_path)
+
+    with open(os.path.join(page_path, title), 'wb') as fd:
         fd.write(content)
 
 def can_get_candy(response):
