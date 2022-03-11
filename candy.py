@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import requests
+import sys
 import lxml.html
 from dotenv import dotenv_values
 
@@ -27,6 +28,7 @@ def get_authenticity_token(response):
         if key := x.attrib.get('name'):
             if key == 'authenticity_token':
                 return x.attrib['value']
+    sys.exit('Failed to get authenticity token')
 
 def save_page(title, content:bytes):
     '''
@@ -43,35 +45,44 @@ def can_get_candy(response):
     timer_element = html.xpath(r'//span//t[@id="next-daily-reward-countdown-timer"]')
     return not timer_element
 
+def sign_in(session):
+    # get authenticity_token for signin page
+    response = session.get(signin_url)
+    form = {
+            'utf8': '✓',
+            'authenticity_token': get_authenticity_token(response),
+            'user[email]': username,
+            'user[password]': password,
+            'user[redirect_to]': '',
+            'user[remember_me]': 0,
+            'commit': 'Log+in'
+            }
+
+    save_page('signin.html', response.content)
+
+    # sign in
+    response = session.post(signin_url, data=form)
+    save_page('signedin.html', response.content)
+    return response
+
+def get_candy(session):
+    # get authenticity_token for daily check in page
+    response = sess.get(candy_url)
+    form = {'authenticity_token': get_authenticity_token(response) }
+    save_page('candy.html', response.content)
+
+    # get them Clams
+    if not can_get_candy(response):
+        sys.exit()
+
+    response = sess.post(daily_check_in_url, data=form)
+    save_page('candy_after.html', response.content)
+    return response
+
 if __name__=='__main__':
     with requests.Session() as sess:
-        # get authenticity_token for signin page
-        response = sess.get(signin_url)
-        form = {
-                'utf8': '✓',
-                'authenticity_token': get_authenticity_token(response),
-                'user[email]': username,
-                'user[password]': password,
-                'user[redirect_to]': '',
-                'user[remember_me]': 0,
-                'commit': 'Log+in'
-
-                }
-        save_page('signin.html', response.content)
-        assert form['authenticity_token']
-
-        # sign in
-        response = sess.post(signin_url, data=form)
-        save_page('signedin.html', response.content)
+        sign_in(sess)
+        get_candy(sess)
         
-        # get authenticity_token for candy page
-        response = sess.get(candy_url)
-        form = {'authenticity_token': get_authenticity_token(response) }
-        save_page('candy.html', response.content)
-
-        # get them Clams
-        if can_get_candy(response):
-            response = sess.post(daily_check_in_url, data=form)
-            save_page('candy_after.html', response.content)
 
 
