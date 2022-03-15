@@ -3,9 +3,7 @@ import requests
 import sys
 import os
 import lxml.html
-import logging
 from dotenv import dotenv_values
-from datetime import datetime
 
 config = dotenv_values('.env')
 username = config['username']
@@ -21,16 +19,6 @@ signin_url         = 'https://www.coingecko.com/account/sign_in'
 candy_url          = 'https://www.coingecko.com/account/candy'
 daily_check_in_url = 'https://www.coingecko.com/account/candy/daily_check_in'
 
-def log(message):
-    logtime = datetime.now()
-    logpath = 'logs'
-    logname = logtime.date().isoformat() + '.log'
-
-    if not os.path.isdir(logpath):
-        os.mkdir(logpath)
-
-    logging.basicConfig(filename=os.path.join(logpath, logname), format='%(asctime)s - %(message)s', level=logging.INFO)
-    logging.info(message)
 
 def get_authenticity_token(response):
     '''
@@ -60,7 +48,7 @@ def can_get_candy(response):
     Check if candy is available by looking for an element with an id=next-daily-reward-countdown-timer_element
     '''
     html = lxml.html.fromstring(response.text)
-    timer_element = html.xpath(r'//span[@id="next-daily-reward-countdown-timer"]')
+    timer_element = html.xpath(r'//span//t[@id="next-daily-reward-countdown-timer"]')
     return not timer_element
 
 def sign_in(session):
@@ -81,7 +69,6 @@ def sign_in(session):
     # sign in
     response = session.post(signin_url, data=form)
     save_page('signedin.html', response.content)
-    log('Signed in')
     return response
 
 def get_candy(session):
@@ -90,7 +77,6 @@ def get_candy(session):
 
     # get them Clams
     if not can_get_candy(response):
-        log('Can\'t get candy yet')
         sys.exit()
 
     form = {'authenticity_token': get_authenticity_token(response) }
@@ -98,7 +84,6 @@ def get_candy(session):
 
     response = sess.post(daily_check_in_url, data=form)
     save_page('candy_after.html', response.content)
-    log('Candy Collected')
     return response
 
 if __name__=='__main__':
