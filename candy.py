@@ -64,11 +64,8 @@ def sign_in(session):
             'commit': 'Log+in'
             }
 
-    save_page('signin.html', response.content)
-
     # sign in
     response = session.post(signin_url, data=form)
-    save_page('signedin.html', response.content)
     return response
 
 def get_candy(session):
@@ -80,10 +77,7 @@ def get_candy(session):
         sys.exit()
 
     form = {'authenticity_token': get_authenticity_token(response) }
-    save_page('candy.html', response.content)
-
     response = sess.post(daily_check_in_url, data=form)
-    save_page('candy_after.html', response.content)
     return response
 
 if __name__=='__main__':
